@@ -1,0 +1,10 @@
+def mainmenu():
+    print("[1] Overall Statistics")
+    print("[2] Analisis Popularitas")
+    print("[3] Analisis per Genre")
+    print("[4] Analisis per Artis")
+    print("[5] Analisis Mood Lagu")
+    print("[6] Top Tracks & Artists")
+    print("[7[ Export Report to jason")
+    print("[0] Keluar")
+    pilihan = input("Masukkan pilihan:  ")

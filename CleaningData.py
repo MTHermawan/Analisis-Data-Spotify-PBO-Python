@@ -230,7 +230,7 @@ class DataCleaner:
 
 
 if __name__ == "__main__":
-    cleaner = DataCleaner("dataset.csv", output_dir="output")
+    cleaner = DataCleaner("./data/dataset.csv", output_dir="output")
     cleaned_data = cleaner.clean()
     cleaner.display_summary()
     cleaner.save_clean()
