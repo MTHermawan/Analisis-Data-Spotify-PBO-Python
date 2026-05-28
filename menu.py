@@ -1,5 +1,7 @@
 from model import load_data
 from genreanalyzer import GenreAnalyzer
+from analisis_top import TopAnalyzer
+from exporter import DataExporter
 
 data = load_data("output/dataset_clean.csv")
 
@@ -29,9 +31,9 @@ def mainmenu():
             case "5":
                 input()
             case "6":
-                input()
+                TopAnalyzer(data).display()
             case "7":
-                input()
+                DataExporter(data).display()
             case "0":
                 continue
             case _:
