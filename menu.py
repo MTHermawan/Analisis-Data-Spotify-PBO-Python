@@ -1,23 +1,29 @@
+from model import load_data
+from genreanalyzer import GenreAnalyzer
+
+data = load_data("output/dataset_clean.csv")
+
 def mainmenu():
     pilihan = ""
-    while (pilihan != "0"):
+    while pilihan != "0":
+        print("SPOTIFY TRACK ANALYSIS SYSTEM")
         print("[1] Overall Statistics")
         print("[2] Analisis Popularitas")
         print("[3] Analisis per Genre")
         print("[4] Analisis per Artis")
         print("[5] Analisis Mood Lagu")
         print("[6] Top Tracks & Artists")
-        print("[7] Export Report to jason")
+        print("[7] Export Report to JSON")
         print("[0] Keluar")
-        pilihan = input("Masukkan pilihan:  ")
-        
+        pilihan = input("Masukkan pilihan: ")
+
         match pilihan:
             case "1":
                 input()
             case "2":
                 input()
             case "3":
-                input()
+                GenreAnalyzer(data).display()
             case "4":
                 input()
             case "5":
@@ -29,5 +35,5 @@ def mainmenu():
             case "0":
                 continue
             case _:
-                input("Pilihan tidak valid!")
+                print("Pilihan tidak valid!")
         print()
