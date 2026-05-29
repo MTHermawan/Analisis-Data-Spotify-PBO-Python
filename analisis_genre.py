@@ -1,17 +1,6 @@
-from abc import ABC, abstractmethod
-from typing import List
+from analisis import BaseAnalyzer
 from model import SpotifyTrack
 
-class BaseAnalyzer(ABC):
-    def __init__(self, data: List[SpotifyTrack]):
-        self._data = data 
-
-    @abstractmethod
-    def analyze(self) -> dict:
-        pass
-
-    def get_total(self) -> int:
-        return len(self._data)
 
 class GenreAnalyzer(BaseAnalyzer):
     def analyze(self) -> dict:
@@ -41,7 +30,7 @@ class GenreAnalyzer(BaseAnalyzer):
         print(f"Total Genre : {r['total_genre']}")
         print(f"Total Lagu  : {self.get_total():,}")
 
-        print("Top 5 Genre Terpopuler")
+        print("\nTop 5 Genre Terpopuler")
         for i, (genre, val) in enumerate(r['top_popular'], 1):
             print(f"  {i}. {genre:<20} {val}")
 

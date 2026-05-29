@@ -1,5 +1,5 @@
 from model import load_data
-from genreanalyzer import GenreAnalyzer
+from analisis_genre import GenreAnalyzer
 from analisis_top import TopAnalyzer
 from exporter import DataExporter
 
