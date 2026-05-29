@@ -149,9 +149,10 @@ class PopularityFormatter(AnalyzerFormatter):
         print()
 
         print("  --- Top 10 Artis (Rata-rata Popularitas, min. 3 lagu) ---")
+        max_artist_len = max((len(artist) for artist, _, _ in stats["top_artists"]), default=0)
         for i, (artist, avg, cnt) in enumerate(stats["top_artists"], 1):
-            nama = (artist[:28] + "..") if len(artist) > 30 else artist
-            print(f"  {i:>2}. {nama:<32} avg={avg:<6} ({cnt} lagu)")
+            nama = (artist[:max_artist_len] + "..") if len(artist) > max_artist_len else artist
+            print(f"  {i:>2}. {nama:<{max_artist_len + 2}} {avg:<6} ({cnt} lagu)")
         print()
 
         print("  --- Korelasi dengan Popularitas (Pearson r) ---")
