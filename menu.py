@@ -2,6 +2,9 @@ from model import load_data
 from analisis_genre import GenreAnalyzer
 from analisis_top import TopAnalyzer
 from exporter import DataExporter
+from analisis_artis import ArtistAnalyzer
+from analisis_overall import OverallAnalyzer
+from analisis_popularitas import PopularityAnalyzer
 
 data = load_data("output/dataset_clean.csv")
 
@@ -21,15 +24,15 @@ def mainmenu():
 
         match pilihan:
             case "1":
-                input()
+                OverallAnalyzer(data).display()
             case "2":
-                input()
+                PopularityAnalyzer(data).display()
             case "3":
                 GenreAnalyzer(data).display()
             case "4":
-                input()
+                ArtistAnalyzer(data).display()
             case "5":
-                input()
+                print()
             case "6":
                 TopAnalyzer(data).display()
             case "7":
@@ -38,4 +41,4 @@ def mainmenu():
                 continue
             case _:
                 print("Pilihan tidak valid!")
-        print()
+        input()
