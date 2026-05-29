@@ -129,23 +129,23 @@ class PopularityFormatter(AnalyzerFormatter):
             pct = round(bucket.count / total * 100, 1) if total else 0
             bar = "█" * (bucket.count * 25 // total) if total else ""
             print(
-                f"  {label:<18} ({lo:>3}–{hi}): "
-                f"{bucket.count:>6,} ({pct:>5.1f}%) {bar}"
+                f"  {label:<18} ({lo:>3}–{hi:<3}): "
+                f"{bucket.count:>7,} ({pct:>5.1f}%) {bar}"
             )
         print()
 
         print("  --- Top 10 Lagu Terpopuler ---")
         for i, t in enumerate(stats["top10"], 1):
-            nama = (t.track_name[:28] + "..") if len(t.track_name) > 30 else t.track_name
-            artis = (t.artists[:18] + "..") if len(t.artists) > 20 else t.artists
-            print(f"  {i:>2}. [{t.popularity:>3}] {nama:<32} — {artis}")
+            nama = (t.track_name[:33] + "..") if len(t.track_name) > 35 else t.track_name
+            artis = (t.artists[:28] + "..") if len(t.artists) > 30 else t.artists
+            print(f"  {i:>2}. [{t.popularity:>3}] {nama:<35} - {artis}")
         print()
 
         print("  --- 10 Lagu dengan Skor Terendah ---")
         for i, t in enumerate(stats["bottom10"], 1):
-            nama = (t.track_name[:28] + "..") if len(t.track_name) > 30 else t.track_name
-            artis = (t.artists[:18] + "..") if len(t.artists) > 20 else t.artists
-            print(f"  {i:>2}. [{t.popularity:>3}] {nama:<32} — {artis}")
+            nama = (t.track_name[:33] + "..") if len(t.track_name) > 35 else t.track_name
+            artis = (t.artists[:28] + "..") if len(t.artists) > 30 else t.artists
+            print(f"  {i:>2}. [{t.popularity:>3}] {nama:<35} - {artis}")
         print()
 
         print("  --- Top 10 Artis (Rata-rata Popularitas, min. 3 lagu) ---")
