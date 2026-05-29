@@ -5,6 +5,7 @@ from exporter import DataExporter
 from analisis_artis import ArtistAnalyzer
 from analisis_overall import OverallAnalyzer
 from analisis_popularitas import PopularityAnalyzer
+from analisis_mood import MoodAnalyzer
 
 data = load_data("output/dataset_clean.csv")
 
@@ -32,7 +33,7 @@ def mainmenu():
             case "4":
                 ArtistAnalyzer(data).display()
             case "5":
-                print()
+                MoodAnalyzer(data).display()
             case "6":
                 TopAnalyzer(data).display()
             case "7":
