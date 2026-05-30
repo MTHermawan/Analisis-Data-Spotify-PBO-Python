@@ -1,6 +1,8 @@
-from model import SpotifyTrack
+from abc import ABC, abstractmethod
 from typing import List
+from model import SpotifyTrack
 
-class AnalyzerCalculator:
+class AnalyzerCalculator(ABC):
+    @abstractmethod
     def calculate(self, data: List[SpotifyTrack]) -> dict:
-        raise NotImplementedError
+        pass

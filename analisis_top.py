@@ -1,5 +1,4 @@
 from analisis import BaseAnalyzer
-from model import SpotifyTrack
 
 class TopAnalyzer(BaseAnalyzer):
     def analyze(self) -> dict:
