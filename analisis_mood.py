@@ -1,6 +1,4 @@
 from analisis import BaseAnalyzer
-from model import SpotifyTrack
-
 
 class MoodAnalyzer(BaseAnalyzer):
     def analyze(self) -> dict:

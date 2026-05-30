@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List
-
 from analisis import BaseAnalyzer
 from analisis_formatter import AnalyzerFormatter
 from analisis_kalkulator import AnalyzerCalculator

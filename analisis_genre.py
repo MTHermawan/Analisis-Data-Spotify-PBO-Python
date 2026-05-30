@@ -1,7 +1,6 @@
 from analisis import BaseAnalyzer
 from model import SpotifyTrack
 
-
 class GenreAnalyzer(BaseAnalyzer):
     def analyze(self) -> dict:
         genre_map = {}

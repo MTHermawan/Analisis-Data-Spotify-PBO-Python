@@ -2,7 +2,6 @@ import csv
 from dataclasses import dataclass
 from typing import List
 
-
 @dataclass
 class SpotifyTrack:
     track_id: str

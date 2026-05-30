@@ -1,7 +1,5 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Protocol, Tuple
-
+from typing import List, Tuple
 from analisis import BaseAnalyzer
 from analisis_formatter import AnalyzerFormatter
 from analisis_kalkulator import AnalyzerCalculator

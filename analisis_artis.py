@@ -1,7 +1,6 @@
 from analisis import BaseAnalyzer
 
 class ArtistAnalyzer(BaseAnalyzer):
-
     def analyze(self) -> dict:
         artist_map = {}
         for track in self._data:
