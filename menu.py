@@ -1,3 +1,5 @@
+import os
+
 from model import load_data
 from analisis_genre import GenreAnalyzer
 from analisis_top import TopAnalyzer
@@ -10,8 +12,11 @@ from analisis_mood import MoodAnalyzer
 data = load_data("output/dataset_clean.csv")
 
 def mainmenu():
+
     pilihan = ""
     while pilihan != "0":
+        os.system("cls" if os.name == "nt" else "clear")
+        
         print("SPOTIFY TRACK ANALYSIS SYSTEM")
         print("[1] Overall Statistics")
         print("[2] Analisis Popularitas")
