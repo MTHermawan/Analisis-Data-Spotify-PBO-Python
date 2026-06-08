@@ -4,3 +4,5 @@ class AnalyzerFormatter(ABC):
     @abstractmethod
     def format(self, stats: dict) -> None:
         pass
+
+    
