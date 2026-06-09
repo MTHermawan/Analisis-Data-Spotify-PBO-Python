@@ -2,11 +2,10 @@ import subprocess
 import sys
 import re
 import ast
-import tokenize
-import io
 from pathlib import Path
 from typing import Tuple
 
+# File sumber yang masuk scope pengujian
 SOURCE_FILES = [
     "model.py",
     "analisis.py",
@@ -21,9 +20,23 @@ SOURCE_FILES = [
     "exporter.py",
 ]
 
+# File sumber yang memiliki test (exporter.py dikecualikan karena tidak ada test-nya)
+TESTED_FILES = [
+    "model.py",
+    "analisis.py",
+    "analisis_formatter.py",
+    "analisis_kalkulator.py",
+    "analisis_overall.py",
+    "analisis_popularitas.py",
+    "analisis_genre.py",
+    "analisis_artis.py",
+    "analisis_mood.py",
+    "analisis_top.py",
+]
+
 TEST_FILE = "test_spotify.py"
 
-# ── Kelas test dan mapping ke kategori laporan ────────────────────────────────
+# Kelas test dan mapping ke kategori laporan
 UNIT_TEST_CLASSES = [
     "TestSpotifyTrackModel",
     "TestOverallCalculator",
@@ -36,23 +49,43 @@ UNIT_TEST_CLASSES = [
     "TestTopAnalyzer",
 ]
 
-VALIDATION_CLASSES  = ["TestDataValidation"]
-EDGE_CASE_CLASSES   = ["TestEdgeCases"]
+VALIDATION_CLASSES   = ["TestDataValidation"]
+EDGE_CASE_CLASSES    = ["TestEdgeCases"]
 CODE_QUALITY_CLASSES = ["TestCodeQuality"]
 
 
-# =============================================================================
 # HELPERS
-# =============================================================================
 
 def run(cmd: list) -> Tuple[str, str, int]:
-    """Jalankan perintah shell, kembalikan (stdout, stderr, returncode)."""
     result = subprocess.run(cmd, capture_output=True, text=True)
     return result.stdout, result.stderr, result.returncode
 
 
+def ensure_pytest_cov() -> bool:
+    try:
+        import pytest_cov
+        return True
+    except ImportError:
+        pass
+    print("  [info] pytest-cov belum terinstall, menginstall otomatis ...")
+    _, _, code = run([sys.executable, "-m", "pip", "install", "pytest-cov", "-q"])
+    if code == 0:
+        print("  [info] pytest-cov berhasil diinstall.\n")
+        return True
+    print("  [warn] Gagal install pytest-cov. Coverage tidak tersedia.\n")
+    return False
+
+
+def ensure_pycodestyle() -> bool:
+    stdout, _, code = run([sys.executable, "-m", "pycodestyle", "--version"])
+    if code == 0:
+        return True
+    print("  [info] pycodestyle belum terinstall, menginstall otomatis ...")
+    _, _, code = run([sys.executable, "-m", "pip", "install", "pycodestyle", "-q"])
+    return code == 0
+
+
 def count_tests_in_classes(classes: list) -> int:
-    """Hitung jumlah test method dalam kelas-kelas yang ditentukan."""
     total = 0
     try:
         src = Path(TEST_FILE).read_text(encoding="utf-8")
@@ -69,7 +102,6 @@ def count_tests_in_classes(classes: list) -> int:
 
 
 def run_pytest_for_classes(classes: list) -> Tuple[int, int]:
-    """Jalankan pytest hanya untuk kelas tertentu, return (passed, failed)."""
     patterns = " or ".join(classes)
     stdout, _, _ = run([
         sys.executable, "-m", "pytest", TEST_FILE,
@@ -86,46 +118,54 @@ def run_pytest_for_classes(classes: list) -> Tuple[int, int]:
     return passed, failed
 
 
-def get_coverage() -> str:
-    """Jalankan pytest dengan coverage hanya pada file sumber, kembalikan persentase."""
-    cov_args = [f"--cov={Path(f).stem}" for f in SOURCE_FILES if Path(f).exists()]
-    stdout, _, _ = run([
+def get_coverage(cov_available: bool) -> str:
+    if not cov_available:
+        return "N/A (install: pip install pytest-cov)"
+
+    cov_args = [
+        f"--cov={Path(f).stem}"
+        for f in TESTED_FILES
+        if Path(f).exists()
+    ]
+    stdout, stderr, _ = run([
         sys.executable, "-m", "pytest", TEST_FILE,
         *cov_args,
         "--cov-report=term", "--tb=no", "-q", "--no-header",
     ])
+
     for line in stdout.splitlines():
         if line.strip().startswith("TOTAL"):
             parts = line.split()
             if len(parts) >= 4:
-                return parts[-1]   # e.g. "96%"
+                return parts[-1]  # e.g. "97%"
+
+    # Fallback: tampilkan petunjuk spesifik jika parsing gagal
+    if "no module named pytest_cov" in (stdout + stderr).lower():
+        return "N/A (install: pip install pytest-cov)"
     return "N/A"
 
 
-def check_pep8() -> Tuple[int, bool]:
-    """Cek PEP 8 dengan pycodestyle. Return (jumlah_pelanggaran, lulus)."""
+def check_pep8(pep8_available: bool) -> Tuple[int, bool]:
+    if not pep8_available:
+        return -1, False
     files = [f for f in SOURCE_FILES if Path(f).exists()]
-    stdout, _, code = run([sys.executable, "-m", "pycodestyle"] + files)
-    violations = len([l for l in stdout.splitlines() if l.strip()])
+    stdout, _, _ = run([sys.executable, "-m", "pycodestyle"] + files)
+    violations = len([ln for ln in stdout.splitlines() if ln.strip()])
     return violations, (violations == 0)
 
 
 def get_data_stats() -> dict:
-    """Ambil statistik dataset dari OverallCalculator secara langsung."""
     stats = {
-        "total_tracks"   : 0,
-        "total_genres"   : 0,
-        "total_artists"  : 0,
-        "missing_values" : 0,
-        "explicit_count" : 0,
-        "popular_count"  : 0,
-        "mood_dist"      : {},
-        "min_popularity" : 0,
-        "max_popularity" : 0,
-        "min_duration"   : 0.0,
-        "max_duration"   : 0.0,
-        "min_tempo"      : 0.0,
-        "max_tempo"      : 0.0,
+        "total_tracks"  : 0,
+        "total_genres"  : 0,
+        "total_artists" : 0,
+        "missing_values": 0,
+        "min_popularity": 0,
+        "max_popularity": 0,
+        "min_duration"  : 0.0,
+        "max_duration"  : 0.0,
+        "min_tempo"     : 0.0,
+        "max_tempo"     : 0.0,
     }
 
     dataset_path = Path("output/dataset_clean.csv")
@@ -133,7 +173,7 @@ def get_data_stats() -> dict:
         return stats
 
     try:
-        from model import load_data, SpotifyTrack
+        from model import load_data
         from analisis_overall import OverallCalculator
 
         data = load_data(str(dataset_path))
@@ -144,13 +184,10 @@ def get_data_stats() -> dict:
         stats["total_tracks"]  = result.total_tracks
         stats["total_genres"]  = result.total_genres
         stats["total_artists"] = result.total_artists
-        stats["explicit_count"]= result.explicit_count
-        stats["popular_count"] = result.popular_count
-        stats["mood_dist"]     = result.mood_dist
 
-        pops     = [t.popularity          for t in data]
-        durs     = [t.get_duration_minutes() for t in data]
-        tempos   = [t.tempo               for t in data]
+        pops   = [t.popularity           for t in data]
+        durs   = [t.get_duration_minutes() for t in data]
+        tempos = [t.tempo                for t in data]
         stats["min_popularity"] = min(pops)
         stats["max_popularity"] = max(pops)
         stats["min_duration"]   = round(min(durs), 2)
@@ -158,9 +195,7 @@ def get_data_stats() -> dict:
         stats["min_tempo"]      = round(min(tempos), 2)
         stats["max_tempo"]      = round(max(tempos), 2)
 
-        # Hitung baris yang gagal di-load (missing/corrupt)
         import csv
-        total_rows = 0
         with open(dataset_path, newline="", encoding="utf-8") as f:
             total_rows = sum(1 for _ in csv.DictReader(f))
         stats["missing_values"] = total_rows - result.total_tracks
@@ -170,35 +205,44 @@ def get_data_stats() -> dict:
 
     return stats
 
+
 def sep(char="─", width=62):
     return char * width
 
+
+# CETAK LAPORAN
+
 def main():
+    # ── Cek ketersediaan tool tambahan sekali di awal ─────────────────────────
+    cov_ok  = ensure_pytest_cov()
+    pep8_ok_install = ensure_pycodestyle()
+
     print()
     print("=" * 62)
     print("  PENGUJIAN & VALIDASI")
     print("  Spotify Track Analysis System — Python OOP")
     print("=" * 62)
 
-    unit_total   = count_tests_in_classes(UNIT_TEST_CLASSES)
-    val_total    = count_tests_in_classes(VALIDATION_CLASSES)
-    edge_total   = count_tests_in_classes(EDGE_CASE_CLASSES)
-    qual_total   = count_tests_in_classes(CODE_QUALITY_CLASSES)
-    grand_total  = unit_total + val_total + edge_total + qual_total
+    # ── Hitung dan jalankan semua kategori test ───────────────────────────────
+    unit_total  = count_tests_in_classes(UNIT_TEST_CLASSES)
+    val_total   = count_tests_in_classes(VALIDATION_CLASSES)
+    edge_total  = count_tests_in_classes(EDGE_CASE_CLASSES)
+    qual_total  = count_tests_in_classes(CODE_QUALITY_CLASSES)
+    grand_total = unit_total + val_total + edge_total + qual_total
 
     print(f"\n  Menjalankan {grand_total} test cases ...\n")
 
-    unit_pass,  unit_fail  = run_pytest_for_classes(UNIT_TEST_CLASSES)
-    val_pass,   val_fail   = run_pytest_for_classes(VALIDATION_CLASSES)
-    edge_pass,  edge_fail  = run_pytest_for_classes(EDGE_CASE_CLASSES)
-    qual_pass,  qual_fail  = run_pytest_for_classes(CODE_QUALITY_CLASSES)
+    unit_pass, unit_fail = run_pytest_for_classes(UNIT_TEST_CLASSES)
+    val_pass,  val_fail  = run_pytest_for_classes(VALIDATION_CLASSES)
+    edge_pass, edge_fail = run_pytest_for_classes(EDGE_CASE_CLASSES)
+    qual_pass, qual_fail = run_pytest_for_classes(CODE_QUALITY_CLASSES)
 
     total_pass = unit_pass + val_pass + edge_pass + qual_pass
     total_fail = unit_fail + val_fail + edge_fail + qual_fail
 
-    coverage   = get_coverage()
-    pep8_viol, pep8_ok = check_pep8()
-    ds         = get_data_stats()
+    coverage             = get_coverage(cov_ok)
+    pep8_viol, pep8_lulus = check_pep8(pep8_ok_install)
+    ds                   = get_data_stats()
 
     # 1. UNIT TESTING
     status_u = "semua passed ✓" if unit_fail == 0 else f"{unit_fail} FAILED ✗"
@@ -226,7 +270,7 @@ def main():
         print(f"  Statistik dataset (output/dataset_clean.csv):")
         print(f"    • Total lagu berhasil dimuat : {ds['total_tracks']:,}")
         if ds["missing_values"] > 0:
-            print(f"    • Baris tidak valid / missing: {ds['missing_values']} baris (di-skip otomatis)")
+            print(f"    • Baris tidak valid / missing: {ds['missing_values']} (di-skip otomatis)")
         else:
             print(f"    • Baris tidak valid / missing: 0 (dataset bersih)")
         print(f"    • Total genre unik           : {ds['total_genres']}")
@@ -262,8 +306,15 @@ def main():
     print(f"    • Bucket 1 lagu     : avg_score = popularity lagu tersebut")
 
     # 4. CODE QUALITY
-    status_q  = "semua passed ✓" if qual_fail == 0 else f"{qual_fail} FAILED ✗"
-    pep8_info = f"Lulus ✓ (0 pelanggaran)" if pep8_ok else f"{pep8_viol} pelanggaran (gaya alignment)"
+    status_q = "semua passed ✓" if qual_fail == 0 else f"{qual_fail} FAILED ✗"
+
+    if not pep8_ok_install:
+        pep8_info = "N/A (install: pip install pycodestyle)"
+    elif pep8_lulus:
+        pep8_info = "Lulus ✓ (0 pelanggaran)"
+    else:
+        pep8_info = f"{pep8_viol} pelanggaran (gaya alignment)"
+
     print()
     print(sep())
     print(f"  Code Quality")
@@ -284,15 +335,25 @@ def main():
     # RINGKASAN AKHIR
     print()
     print("=" * 62)
-    all_pass = (total_fail == 0)
-    verdict  = "LULUS ✓" if all_pass else f"GAGAL ✗ ({total_fail} test gagal)"
+    verdict = "LULUS ✓" if total_fail == 0 else f"GAGAL ✗ ({total_fail} test gagal)"
 
-    print(f"  Hasil  :  {total_pass}/{grand_total} tests passed  |  Coverage: {coverage}  "
-          f"|  PEP 8: {'Lulus' if pep8_ok else f'{pep8_viol} issues'}  |  Status: {verdict}")
+    if not pep8_ok_install:
+        pep8_label = "N/A"
+    elif pep8_lulus:
+        pep8_label = "Lulus"
+    else:
+        pep8_label = f"{pep8_viol} issues"
+
+    print(
+        f"  Hasil  :  {total_pass}/{grand_total} tests passed"
+        f"  |  Coverage: {coverage}"
+        f"  |  PEP 8: {pep8_label}"
+        f"  |  Status: {verdict}"
+    )
     print("=" * 62)
     print()
 
-    return 0 if all_pass else 1
+    return 0 if total_fail == 0 else 1
 
 
 if __name__ == "__main__":
